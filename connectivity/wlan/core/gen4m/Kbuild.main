@@ -1818,7 +1818,11 @@ ifeq ($(WMT_SUPPORT), y)
             CONFIG_MODIFY_TX_POWER_BY_BAT_VOLT=y
         endif
     endif
-    ccflags-y += -DCFG_ENABLE_WAKE_LOCK=1
+    ifeq ($(WLAN_CHIP_ID),6893)
+        ccflags-y += -DCFG_ENABLE_WAKE_LOCK=0
+    else
+        ccflags-y += -DCFG_ENABLE_WAKE_LOCK=1
+    endif
     ccflags-y += -DCFG_SUPPORT_MET_LOG=1
 endif
 
