@@ -59,7 +59,9 @@ struct completion g_RstOffComp;
 u_int8_t g_RstOffCompWaitFlag;
 struct completion g_RstOnComp;
 struct completion g_triggerComp;
+#if CFG_ENABLE_WAKE_LOCK
 KAL_WAKE_LOCK_T *g_IntrWakeLock;
+#endif
 struct task_struct *wlan_reset_thread;
 u_int8_t g_IsWholeChipRst = FALSE;
 u_int8_t g_SubsysRstCnt;
@@ -429,7 +431,9 @@ void glResetInit(struct GLUE_INFO *prGlueInfo)
 #endif
 #if CFG_WMT_RESET_API_SUPPORT
 	init_completion(&wifi_rst.halt_comp);
+#if CFG_ENABLE_WAKE_LOCK
 	KAL_WAKE_LOCK_INIT(NULL, g_IntrWakeLock, "WLAN Reset");
+#endif
 	init_waitqueue_head(&g_waitq_rst);
 	init_completion(&g_RstOffComp);
 	glUpdateRstFlag(RST_FLAG_RST_OFF_COMP_WAIT, FALSE);
@@ -2459,8 +2463,10 @@ int wlan_reset_thread_main(void *data)
 	       KAL_GET_CURRENT_THREAD_NAME(), KAL_GET_CURRENT_THREAD_ID());
 
 	while (TRUE) {
+#if CFG_ENABLE_WAKE_LOCK
 		/* Unlock wakelock if hif_thread going to idle */
 		KAL_WAKE_UNLOCK(NULL, prWlanRstThreadWakeLock);
+#endif
 		/*
 		 * sleep on waitqueue if no events occurred. Event contain
 		 * (1) GLUE_FLAG_HALT (2) GLUE_FLAG_RST
@@ -2623,7 +2629,9 @@ void kalSetRstEvent(u_int8_t force_dump)
 {
 	struct RESET_STRUCT *rst = &wifi_rst;
 
+#if CFG_ENABLE_WAKE_LOCK
 	KAL_WAKE_LOCK(NULL, g_IntrWakeLock);
+#endif
 
 	rst->force_dump = force_dump;
 	set_bit(GLUE_FLAG_RST_START_BIT, &rst->ulFlag);
@@ -2636,7 +2644,9 @@ void kalSetRstFwNotifyL05Event(u_int8_t force_dump)
 {
 	struct RESET_STRUCT *rst = &wifi_rst;
 
+#if CFG_ENABLE_WAKE_LOCK
 	KAL_WAKE_LOCK(NULL, g_IntrWakeLock);
+#endif
 
 	rst->force_dump = force_dump;
 	set_bit(GLUE_FLAG_RST_FW_NOTIFY_L05_BIT, &rst->ulFlag);
@@ -2649,7 +2659,9 @@ void kalSetRstFwNotifyTriggerL0Event(u_int8_t force_dump)
 {
 	struct RESET_STRUCT *rst = &wifi_rst;
 
+#if CFG_ENABLE_WAKE_LOCK
 	KAL_WAKE_LOCK(NULL, g_IntrWakeLock);
+#endif
 
 	rst->force_dump = force_dump;
 	set_bit(GLUE_FLAG_RST_FW_NOTIFY_L0_BIT, &rst->ulFlag);
@@ -2662,7 +2674,9 @@ void glRstSetRstEndEvent(void)
 {
 	struct RESET_STRUCT *rst = &wifi_rst;
 
+#if CFG_ENABLE_WAKE_LOCK
 	KAL_WAKE_LOCK(NULL, g_IntrWakeLock);
+#endif
 
 	set_bit(GLUE_FLAG_RST_END_BIT, &rst->ulFlag);
 
