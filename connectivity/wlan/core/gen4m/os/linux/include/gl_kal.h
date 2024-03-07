@@ -2490,8 +2490,8 @@ int32_t kalGetFwFlavor(uint8_t *flavor);
 int32_t kalGetFwFlavorByPlat(uint8_t *flavor);
 int32_t kalGetConnsysVerId(void);
 int32_t kalPerMonSetForceEnableFlag(uint8_t uFlag);
-int32_t kalFbNotifierReg(struct GLUE_INFO *prGlueInfo);
-void kalFbNotifierUnReg(void);
+int32_t kalNotifierReg(struct GLUE_INFO *prGlueInfo);
+void kalNotifierUnReg(void);
 int32_t kalGetScpDumpInfo(u64 *addr, unsigned int *size);
 
 #if KERNEL_VERSION(3, 0, 0) <= LINUX_VERSION_CODE
