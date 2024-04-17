@@ -798,7 +798,7 @@ static uint8_t assocSkipRSNXIe(struct ADAPTER *prAdapter,
 
 		/* skip rsnxe if target ap doesn't support rsnxe */
 		if (prTargetBss && !prTargetBss->fgIERSNX) {
-			DBGLOG(SAA, INFO,
+			DBGLOG(SAA, LOUD,
 				"Skip RSNXE if AP unsupported");
 			return TRUE;
 		}
