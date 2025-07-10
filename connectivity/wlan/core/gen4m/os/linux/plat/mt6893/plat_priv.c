@@ -72,6 +72,7 @@ int32_t kalCheckTputLoad(struct ADAPTER *prAdapter,
 			 int32_t i4Pending,
 			 uint32_t u4Used)
 {
+#if CFG_SUPPORT_CPU_BOOST
 	uint32_t pendingTh =
 		CFG_TX_STOP_NETIF_PER_QUEUE_THRESHOLD *
 		prAdapter->rWifiVar.u4PerfMonPendingTh / 100;
@@ -82,10 +83,14 @@ int32_t kalCheckTputLoad(struct ADAPTER *prAdapter,
 	       i4Pending >= pendingTh &&
 	       u4Used >= usedTh ?
 	       TRUE : FALSE;
+#else
+	return FALSE;
+#endif
 }
 
 void kalSetTaskUtilMinPct(int pid, unsigned int min)
 {
+#if CFG_SUPPORT_CPU_BOOST
 #if KERNEL_VERSION(5, 4, 0) <= CFG80211_VERSION_CODE
 	int ret = 0;
 	unsigned int blc_1024;
@@ -129,9 +134,11 @@ void kalSetTaskUtilMinPct(int pid, unsigned int min)
 #else
 	set_task_util_min_pct(pid, min);
 #endif
+#endif
 }
 
-#if KERNEL_VERSION(5, 4, 0) <= CFG80211_VERSION_CODE
+#if CFG_SUPPORT_CPU_BOOST && \
+	KERNEL_VERSION(5, 4, 0) <= CFG80211_VERSION_CODE
 static LIST_HEAD(wlan_policy_list);
 struct wlan_policy {
 	struct freq_qos_request	qos_req;
@@ -142,6 +149,7 @@ struct wlan_policy {
 
 void kalSetCpuFreq(int32_t freq)
 {
+#if CFG_SUPPORT_CPU_BOOST
 #if KERNEL_VERSION(5, 4, 0) <= CFG80211_VERSION_CODE
 	int cpu, ret;
 	struct cpufreq_policy *policy;
@@ -204,6 +212,7 @@ void kalSetCpuFreq(int32_t freq)
 
 	kfree(freq_to_set);
 #endif
+#endif
 }
 
 void kalSetDramBoost(struct ADAPTER *prAdapter, int32_t iLv)
@@ -233,6 +242,7 @@ int32_t kalBoostCpu(struct ADAPTER *prAdapter,
 		    uint32_t u4TarPerfLevel,
 		    uint32_t u4BoostCpuTh)
 {
+#if CFG_SUPPORT_CPU_BOOST
 	struct GLUE_INFO *prGlueInfo = NULL;
 	int32_t i4Freq = -1;
 	static u_int8_t fgRequested = ENUM_CPU_BOOST_STATUS_INIT;
@@ -276,6 +286,9 @@ int32_t kalBoostCpu(struct ADAPTER *prAdapter,
 	kalTraceInt(fgRequested == ENUM_CPU_BOOST_STATUS_START, "kalBoostCpu");
 
 	return 0;
+#else
+	return 0;
+#endif
 }
 
 uint32_t kalGetEmiMetOffset(void)
