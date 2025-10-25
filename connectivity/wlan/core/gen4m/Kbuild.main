@@ -119,6 +119,7 @@ $(info $$WLAN_CONNAC3_DEV is [${WLAN_CONNAC3_DEV}])
 # Let the scheduler manage MT6893 CPU performance.
 ifeq ($(WLAN_CHIP_ID),6893)
     ccflags-y += -DCFG_SUPPORT_CPU_BOOST=0
+    ccflags-y += -DCFG_SAP_2G_BW=1
 endif
 
 
