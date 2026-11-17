@@ -5698,7 +5698,8 @@ int hif_thread(void *data)
 
 	KAL_WAKE_LOCK_INIT(prGlueInfo->prAdapter,
 			   prHifThreadWakeLock, "WLAN hif_thread");
-	KAL_WAKE_LOCK(prGlueInfo->prAdapter, prHifThreadWakeLock);
+	if (prGlueInfo->prAdapter->rWifiVar.u4WakeLockThreadWakeup)
+		KAL_WAKE_LOCK(prGlueInfo->prAdapter, prHifThreadWakeLock);
 #endif
 
 	DBGLOG(INIT, INFO, "%s:%u starts running...\n",
@@ -5756,7 +5757,8 @@ int hif_thread(void *data)
 			RX_INC_HIF_CNT(prRxCtrl, HIF_FLAG_HIF_TX_CMD);
 
 #if CFG_ENABLE_WAKE_LOCK
-		if (!KAL_WAKE_LOCK_ACTIVE(prGlueInfo->prAdapter,
+		if (prGlueInfo->prAdapter->rWifiVar.u4WakeLockThreadWakeup &&
+			!KAL_WAKE_LOCK_ACTIVE(prGlueInfo->prAdapter,
 					  prHifThreadWakeLock))
 			KAL_WAKE_LOCK(prGlueInfo->prAdapter,
 				      prHifThreadWakeLock);
@@ -5934,7 +5936,8 @@ int rx_thread(void *data)
 #if CFG_ENABLE_WAKE_LOCK
 	KAL_WAKE_LOCK_INIT(prGlueInfo->prAdapter,
 			   prRxThreadWakeLock, "WLAN rx_thread");
-	KAL_WAKE_LOCK(prGlueInfo->prAdapter, prRxThreadWakeLock);
+	if (prGlueInfo->prAdapter->rWifiVar.u4WakeLockRxTimeout)
+		KAL_WAKE_LOCK(prGlueInfo->prAdapter, prRxThreadWakeLock);
 #endif
 
 	DBGLOG(INIT, INFO, "%s:%u starts running...\n",
@@ -5971,7 +5974,8 @@ int rx_thread(void *data)
 		kalTraceBegin("rx_thread");
 
 #if CFG_ENABLE_WAKE_LOCK
-		if (!KAL_WAKE_LOCK_ACTIVE(prGlueInfo->prAdapter,
+		if (prGlueInfo->prAdapter->rWifiVar.u4WakeLockRxTimeout &&
+			!KAL_WAKE_LOCK_ACTIVE(prGlueInfo->prAdapter,
 					  prRxThreadWakeLock))
 			KAL_WAKE_LOCK(prGlueInfo->prAdapter,
 				      prRxThreadWakeLock);
@@ -6098,7 +6102,8 @@ int main_thread(void *data)
 #if CFG_ENABLE_WAKE_LOCK
 	KAL_WAKE_LOCK_INIT(prGlueInfo->prAdapter,
 			   prTxThreadWakeLock, "WLAN main_thread");
-	KAL_WAKE_LOCK(prGlueInfo->prAdapter, prTxThreadWakeLock);
+	if (prGlueInfo->prAdapter->rWifiVar.u4WakeLockThreadWakeup)
+		KAL_WAKE_LOCK(prGlueInfo->prAdapter, prTxThreadWakeLock);
 #endif
 
 	DBGLOG(INIT, INFO, "%s:%u starts running...\n",
@@ -6137,7 +6142,8 @@ int main_thread(void *data)
 				!= 0));
 		} while (ret != 0);
 #if CFG_ENABLE_WAKE_LOCK
-		if (!KAL_WAKE_LOCK_ACTIVE(prGlueInfo->prAdapter,
+		if (prGlueInfo->prAdapter->rWifiVar.u4WakeLockThreadWakeup &&
+			!KAL_WAKE_LOCK_ACTIVE(prGlueInfo->prAdapter,
 					  prTxThreadWakeLock))
 			KAL_WAKE_LOCK(prGlueInfo->prAdapter,
 				      prTxThreadWakeLock);
