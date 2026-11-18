@@ -914,7 +914,11 @@ static inline void kalCfg80211VendorEvent(void *pvPacket)
 
 #define KAL_WAKE_LOCK_TIMEOUT(_prAdapter, _prWakeLock, _u4Timeout) \
 { \
-	if (_prWakeLock) { \
+	/* u4WakeLock*TO=0 means: do not keep the device awake.
+	 * __pm_wakeup_event(ws, 0) still counts as a wake event and blocks
+	 * s2idle, so skip it completely when the configured timeout is 0.
+	 */ \
+	if ((_prWakeLock) && (_u4Timeout)) { \
 		__pm_wakeup_event(_prWakeLock, JIFFIES_TO_MSEC(_u4Timeout)); \
 	} \
 }
