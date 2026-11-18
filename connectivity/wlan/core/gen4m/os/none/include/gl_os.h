@@ -223,6 +223,7 @@ extern u_int32_t u4SdesDetectTime;
 /* wake lock for suspend/resume */
 #define WAKE_LOCK_RX_TIMEOUT                            300	/* ms */
 #define WAKE_LOCK_THREAD_WAKEUP_TIMEOUT                 50	/* ms */
+#define WAKE_LOCK_TIMER_TIMEOUT                         5000	/* ms */
 
 /*******************************************************************************
  *                             D A T A   T Y P E S

@@ -368,6 +368,7 @@ extern uint8_t g_aucNvram_OnlyPreCal[];
 
 #define WAKE_LOCK_RX_TIMEOUT                            300	/* ms */
 #define WAKE_LOCK_THREAD_WAKEUP_TIMEOUT                 50	/* ms */
+#define WAKE_LOCK_TIMER_TIMEOUT                         5000	/* ms */
 
 #define IW_AUTH_CIPHER_GCMP128  0x00000040
 #define IW_AUTH_CIPHER_GCMP256  0x00000080

@@ -177,17 +177,29 @@ static u_int8_t cnmTimerSetTimer(struct ADAPTER *prAdapter,
 
 	kalSetTimer(prAdapter->prGlueInfo, rTimeout);
 
-	if ((eType == TIMER_WAKELOCK_REQUEST)
-		|| (rTimeout <= SEC_TO_SYSTIME(WAKE_LOCK_MAX_TIME)
-		&& (eType == TIMER_WAKELOCK_AUTO))) {
+	/* TIMER_WAKELOCK_REQUEST always keeps the device awake. The AUTO case
+	 * only does so for short timers: a pending timer that expires within
+	 * u4WakeLockTimerTimeout (default 5000 ms, matching the previous
+	 * WAKE_LOCK_MAX_TIME) needs the CPU before the host enters suspend.
+	 * WakeLockTimerTO=0 disables the AUTO wake lock entirely, like
+	 * WakeLockRxTO and WakeLockThreadTO do for their sources. The root
+	 * timer is a single indefinite __pm_stay_awake() source, so an AUTO
+	 * timer that keeps re-arming (periodic roam/OBSS timers) can hold it
+	 * forever and abort every s2idle cycle.
+	 */
+	if (eType == TIMER_WAKELOCK_REQUEST)
 		fgNeedWakeLock = TRUE;
-
-		if (!prRootTimer->fgWakeLocked) {
-			KAL_WAKE_LOCK(prAdapter, prRootTimer->rWakeLock);
-			prRootTimer->fgWakeLocked = TRUE;
-		}
-	} else {
+	else if (eType == TIMER_WAKELOCK_AUTO)
+		fgNeedWakeLock =
+			prAdapter->rWifiVar.u4WakeLockTimerTimeout &&
+			(rTimeout <= MSEC_TO_SYSTIME(
+				prAdapter->rWifiVar.u4WakeLockTimerTimeout));
+	else
 		fgNeedWakeLock = FALSE;
+
+	if (fgNeedWakeLock && !prRootTimer->fgWakeLocked) {
+		KAL_WAKE_LOCK(prAdapter, prRootTimer->rWakeLock);
+		prRootTimer->fgWakeLocked = TRUE;
 	}
 
 	return fgNeedWakeLock;
