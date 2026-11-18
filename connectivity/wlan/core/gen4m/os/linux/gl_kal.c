@@ -7168,7 +7168,8 @@ uint32_t kalRxTaskWorkDone(struct GLUE_INFO *pr, u_int8_t fgIsInt)
 
 void kalSetIntEvent(struct GLUE_INFO *pr)
 {
-	KAL_WAKE_LOCK(pr->prAdapter, pr->rIntrWakeLock);
+	if (pr->prAdapter->rWifiVar.u4WakeLockThreadWakeup)
+		KAL_WAKE_LOCK(pr->prAdapter, pr->rIntrWakeLock);
 
 	/* Do not wakeup hif_thread in direct mode */
 	if (HAL_IS_RX_DIRECT(pr->prAdapter))
@@ -7195,7 +7196,8 @@ void kalSetIntEvent(struct GLUE_INFO *pr)
 
 void kalSetDrvIntEvent(struct GLUE_INFO *pr)
 {
-	KAL_WAKE_LOCK(pr->prAdapter, pr->rIntrWakeLock);
+	if (pr->prAdapter->rWifiVar.u4WakeLockThreadWakeup)
+		KAL_WAKE_LOCK(pr->prAdapter, pr->rIntrWakeLock);
 
 	if (!HAL_IS_RX_DIRECT(pr->prAdapter))
 		set_bit(GLUE_FLAG_DRV_INT_BIT, &pr->ulFlag);
@@ -7268,7 +7270,8 @@ void kalSetHifDbgEvent(struct GLUE_INFO *pr)
 #if CFG_SUPPORT_MULTITHREAD
 void kalSetSerIntEvent(struct GLUE_INFO *pr)
 {
-	KAL_WAKE_LOCK(pr->prAdapter, pr->rIntrWakeLock);
+	if (pr->prAdapter->rWifiVar.u4WakeLockThreadWakeup)
+		KAL_WAKE_LOCK(pr->prAdapter, pr->rIntrWakeLock);
 
 	set_bit(GLUE_FLAG_SER_INT_BIT, &pr->ulFlag);
 
