@@ -8169,6 +8169,8 @@ void wlanInitFeatureOptionImpl(struct ADAPTER *prAdapter, uint8_t *pucKey)
 		"WakeLockRxTO", WAKE_LOCK_RX_TIMEOUT, FEATURE_TO_CUSTOMER);
 	INIT_UINT(prWifiVar->u4WakeLockThreadWakeup, "WakeLockThreadTO",
 		  WAKE_LOCK_THREAD_WAKEUP_TIMEOUT, FEATURE_TO_CUSTOMER);
+	INIT_UINT(prWifiVar->u4WakeLockTimerTimeout, "WakeLockTimerTO",
+		  WAKE_LOCK_TIMER_TIMEOUT, FEATURE_TO_CUSTOMER);
 
 	INIT_UINT(prWifiVar->ucSmartRTS, "SmartRTS", 0, FEATURE_TO_CUSTOMER);
 	INIT_UINT(prWifiVar->ePowerMode, "PowerSave", Param_PowerModeMax,
