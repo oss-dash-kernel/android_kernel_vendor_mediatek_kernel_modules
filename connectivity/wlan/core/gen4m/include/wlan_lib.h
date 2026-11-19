@@ -171,7 +171,7 @@
 #define WLAN_CFG_ARGV_MAX 20
 #endif
 #define WLAN_CFG_ARGV_MAX_LONG	22	/* for WOW, 2+20 */
-#define WLAN_CFG_ENTRY_NUM_MAX	550	/* max number of wifi.cfg */
+#define WLAN_CFG_ENTRY_NUM_MAX	700	/* max number of wifi.cfg */
 #if CFG_SUPPORT_NCHO
 #define WLAN_CFG_KEY_LEN_MAX	48	/* include \x00  EOL */
 #else
