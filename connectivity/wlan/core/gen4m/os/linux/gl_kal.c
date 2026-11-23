@@ -5291,10 +5291,17 @@ kalIoctlByBssIdx(struct GLUE_INFO *prGlueInfo,
 	smp_mb();
 	set_bit(GLUE_FLAG_OID_BIT, &prGlueInfo->ulFlag);
 
-	/* <7.1> Hold wakelock to ensure OS won't be suspended */
-	KAL_WAKE_LOCK_TIMEOUT(prGlueInfo->prAdapter,
-		prGlueInfo->rTimeoutWakeLock, MSEC_TO_JIFFIES(
-		prGlueInfo->prAdapter->rWifiVar.u4WakeLockThreadWakeup));
+	/* <7.1> Hold wakelock to ensure OS won't be suspended.
+	 * Skip this while the system is suspending. cfg80211 leaves the
+	 * interface during wiphy_suspend() when no WoWLAN is configured,
+	 * so this OID is issued from inside the system suspend transition.
+	 * Arming a wakeup source there aborts the transition with
+	 * "PM: Some devices failed to suspend, or early wake event detected".
+	 */
+	if (pm_suspend_target_state == PM_SUSPEND_ON)
+		KAL_WAKE_LOCK_TIMEOUT(prGlueInfo->prAdapter,
+			prGlueInfo->rTimeoutWakeLock, MSEC_TO_JIFFIES(
+			prGlueInfo->prAdapter->rWifiVar.u4WakeLockThreadWakeup));
 
 	/* <8> Wake up main thread to handle kick start the I/O request.
 	 * Use memory barrier to ensure set bit is done and then wake up main
@@ -6147,7 +6154,12 @@ int main_thread(void *data)
 				!= 0));
 		} while (ret != 0);
 #if CFG_ENABLE_WAKE_LOCK
-		if (!KAL_WAKE_LOCK_ACTIVE(prGlueInfo->prAdapter,
+		/* Do not hold the main_thread wakeup source while the
+		 * system is suspending: the OID that woke us up was queued
+		 * by the suspend path itself (see kalIoctlByBssIdx()).
+		 */
+		if (pm_suspend_target_state == PM_SUSPEND_ON &&
+		    !KAL_WAKE_LOCK_ACTIVE(prGlueInfo->prAdapter,
 					  prTxThreadWakeLock))
 			KAL_WAKE_LOCK(prGlueInfo->prAdapter,
 				      prTxThreadWakeLock);
