@@ -12982,16 +12982,28 @@ static int wlan_pm_notifier_callback(struct notifier_block
 		if (prGlueInfo->fgIsInSuspendMode)
 			goto out;
 		prGlueInfo->fgIsInSuspendMode = TRUE;
-		wlanSetSuspendMode(prGlueInfo, TRUE);
-		p2pSetSuspendMode(prGlueInfo, TRUE);
+		/* Do NOT program suspend mode here: wlanSetSuspendMode()
+		 * and p2pSetSuspendMode() issue OID commands through
+		 * kalIoctl(), which arms KAL_WAKE_LOCK_TIMEOUT
+		 * (__pm_wakeup_event) and therefore bumps
+		 * combined_event_count inside the PM_SUSPEND_PREPARE
+		 * window. pm_wakeup_pending() then aborts the freeze loop
+		 * with -EBUSY and the suspend never happens.
+		 * If WoWLAN is enabled, kalWowProcess() may already have
+		 * programmed the suspend mode from SET_WOW_ENABLE; in the
+		 * regular case it is only reached later, from the PCI
+		 * .suspend path (mtk_pci_suspend -> wlanSuspendPmHandle),
+		 * i.e. after this notifier has run.
+		 */
 		break;
 	case PM_POST_SUSPEND:
 	case PM_POST_HIBERNATION:
 		if (!prGlueInfo->fgIsInSuspendMode)
 			goto out;
 		prGlueInfo->fgIsInSuspendMode = FALSE;
-		wlanSetSuspendMode(prGlueInfo, FALSE);
-		p2pSetSuspendMode(prGlueInfo, FALSE);
+		/* No OID commands on the way out either, for symmetry:
+		 * nothing was programmed on the way in.
+		 */
 		break;
 	}
 
