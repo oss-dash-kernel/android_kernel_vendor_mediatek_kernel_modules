@@ -2054,9 +2054,15 @@ uint32_t kalRxIndicatePkts(struct GLUE_INFO *prGlueInfo,
 	for (ucIdx = 0; ucIdx < ucPktNum; ucIdx++)
 		kalRxIndicateOnePkt(prGlueInfo, apvPkts[ucIdx]);
 
-	KAL_WAKE_LOCK_TIMEOUT(prGlueInfo->prAdapter,
-		prGlueInfo->rTimeoutWakeLock, MSEC_TO_JIFFIES(
-		prGlueInfo->prAdapter->rWifiVar.u4WakeLockRxTimeout));
+	/* Do not arm the timeout wake lock while the system is suspending.
+	 * __pm_wakeup_event() only bumps combined_event_count in that window,
+	 * and pm_wakeup_pending() then aborts the freeze with -EBUSY. The
+	 * RX thread is frozen at that point, so the hint buys nothing.
+	 */
+	if (!prGlueInfo->fgIsInSuspendMode)
+		KAL_WAKE_LOCK_TIMEOUT(prGlueInfo->prAdapter,
+			prGlueInfo->rTimeoutWakeLock, MSEC_TO_JIFFIES(
+			prGlueInfo->prAdapter->rWifiVar.u4WakeLockRxTimeout));
 
 	return WLAN_STATUS_SUCCESS;
 }
@@ -6023,10 +6029,12 @@ int rx_thread(void *data)
 						    prQueueEntry));
 					}
 
-				    KAL_WAKE_LOCK_TIMEOUT(prGlueInfo->prAdapter,
-					prGlueInfo->rTimeoutWakeLock,
-					MSEC_TO_JIFFIES(prGlueInfo->prAdapter
-					->rWifiVar.u4WakeLockRxTimeout));
+					if (!prGlueInfo->fgIsInSuspendMode)
+						KAL_WAKE_LOCK_TIMEOUT(
+						    prGlueInfo->prAdapter,
+						    prGlueInfo->rTimeoutWakeLock,
+						    MSEC_TO_JIFFIES(prGlueInfo->prAdapter
+						    ->rWifiVar.u4WakeLockRxTimeout));
 				}
 			}
 #if CFG_SUPPORT_RX_GRO
@@ -7303,9 +7311,14 @@ void kalSetTxEvent2Hif(struct GLUE_INFO *pr)
 	if (!pr->hif_thread)
 		return;
 
-	KAL_WAKE_LOCK_TIMEOUT(pr->prAdapter, pr->rTimeoutWakeLock,
-			      MSEC_TO_JIFFIES(
-			      pr->prAdapter->rWifiVar.u4WakeLockThreadWakeup));
+	/* Same as the RX path: no timeout wake lock inside the suspend
+	 * window. set_bit() and the wait queue wakeup below are kept, so a
+	 * queued TX event is still processed once the system resumes.
+	 */
+	if (!pr->fgIsInSuspendMode)
+		KAL_WAKE_LOCK_TIMEOUT(pr->prAdapter, pr->rTimeoutWakeLock,
+				      MSEC_TO_JIFFIES(
+				      pr->prAdapter->rWifiVar.u4WakeLockThreadWakeup));
 
 	set_bit(GLUE_FLAG_HIF_TX_BIT, &pr->ulFlag);
 
