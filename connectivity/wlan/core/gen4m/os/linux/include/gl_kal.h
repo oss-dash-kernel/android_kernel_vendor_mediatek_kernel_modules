@@ -14,6 +14,10 @@
 #ifndef _GL_KAL_H
 #define _GL_KAL_H
 
+#ifdef __KERNEL__
+#include <linux/suspend.h>
+#endif
+
 /*******************************************************************************
  *                         C O M P I L E R   F L A G S
  *******************************************************************************
@@ -905,16 +909,32 @@ static inline void kalCfg80211VendorEvent(void *pvPacket)
 	} \
 }
 #endif
+/*
+ * Do not arm a wakeup source from inside a system suspend transition.
+ *
+ * cfg80211 leaves the interface in wiphy_suspend() when no WoWLAN is
+ * configured. That work wakes this driver's own threads, which then take
+ * their wakeup sources, and arming a wakeup source while the transition is
+ * already running aborts s2idle with
+ *   Abort: Pending Wakeup Sources: <name>
+ * During the transition there is nothing left to keep awake, so the request
+ * is skipped. The work itself still runs.
+ *
+ * Guarding here rather than at every call site covers all current and future
+ * users of these macros. A skipped lock is safe to release: the wakeup core
+ * ignores an unbalanced __pm_relax() (wakeup_source_deactivate() returns
+ * early when relax_count != active_count).
+ */
 #define KAL_WAKE_LOCK(_prAdapter, _prWakeLock) \
 { \
-	if (_prWakeLock) { \
+	if (_prWakeLock && pm_suspend_target_state == PM_SUSPEND_ON) { \
 		__pm_stay_awake(_prWakeLock); \
 	} \
 }
 
 #define KAL_WAKE_LOCK_TIMEOUT(_prAdapter, _prWakeLock, _u4Timeout) \
 { \
-	if (_prWakeLock) { \
+	if (_prWakeLock && pm_suspend_target_state == PM_SUSPEND_ON) { \
 		__pm_wakeup_event(_prWakeLock, JIFFIES_TO_MSEC(_u4Timeout)); \
 	} \
 }
@@ -1975,6 +1995,8 @@ kalIoctl(struct GLUE_INFO *prGlueInfo,
 	 PFN_OID_HANDLER_FUNC pfnOidHandler,
 	 void *pvInfoBuf, uint32_t u4InfoBufLen,
 	 uint32_t *pu4QryInfoLen);
+
+u_int8_t kalIsSystemSuspending(void);
 
 uint32_t
 kalIoctlByBssIdx(struct GLUE_INFO *prGlueInfo,
